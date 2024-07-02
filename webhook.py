@@ -18,7 +18,7 @@ class Update(BaseModel):
 
 @router.post(f"/{TELEGRAM_BOT_TOKEN}")
 async def webhook(update: Update):
-    print(update.message)
+    logging.info(update)
 
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
 
@@ -60,8 +60,7 @@ Dates will be announced in our announcement channel. Stay tuned!
     }
 
     response = requests.post(url, json=payload)
-    print(response.json())
-    logging.info(update)
+    logging.info(response)
     return {"status": "ok"}
 
 @router.on_event("startup")

@@ -1,12 +1,17 @@
 from fastapi import HTTPException, APIRouter
 from pydantic import BaseModel
+from dotenv import load_dotenv
+
+import os
 import logging
 import requests
 
 
+load_dotenv()
+
 # Define your Telegram bot token
-TELEGRAM_BOT_TOKEN = "1797534752:AAGA1qFWEWXSnyxUOd6sJZqCi2j0BxU1EJg"
-WEBHOOK_URL = f"https://8cd4-89-107-97-177.ngrok-free.app/webhook/{TELEGRAM_BOT_TOKEN}"
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+WEBHOOK_URL = os.getenv('WEBHOOK_URL')
 
 
 router = APIRouter()
@@ -16,7 +21,7 @@ class Update(BaseModel):
     message: dict
 
 
-@router.post(f"/{TELEGRAM_BOT_TOKEN}")
+@router.post(f"")
 async def webhook(update: Update):
     logging.info(update)
 
@@ -63,6 +68,7 @@ Dates will be announced in our announcement channel. Stay tuned!
     logging.info(response)
     return {"status": "ok"}
 
+
 @router.on_event("startup")
 async def on_startup():
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/setWebhook"
@@ -73,6 +79,7 @@ async def on_startup():
     logging.info(f"Webhook set: {WEBHOOK_URL}")
     print(f"Webhook set: {WEBHOOK_URL}")
 
+
 @router.on_event("shutdown")
 async def on_shutdown():
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/deleteWebhook"
@@ -80,6 +87,7 @@ async def on_shutdown():
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail="Failed to delete webhook")
     logging.info("Webhook deleted")
+
 
 @router.get("/")
 async def root():

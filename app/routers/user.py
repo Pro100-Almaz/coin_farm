@@ -17,9 +17,11 @@ def verify_password_with_salt(stored_hash: str, password: str) -> bool:
     return sha256.hexdigest() == stored_hash
 
 
+'''
 password = "mysecretpassword"
 hashed_password_with_salt = hash_password_with_salt(password)
 print("Hashed Password with Salt:", hashed_password_with_salt)
-print("Verification:", verify_password_with_salt(hashed_password_with_salt, "mysecretpassword"))  # Should print: True
-print("Verification:", verify_password_with_salt(hashed_password_with_salt, "wrongpassword"))    # Should print: False
+print("Verification:", verify_password_with_salt(hashed_password_with_salt, "mysecretpassword"))  
+print("Verification:", verify_password_with_salt(hashed_password_with_salt, "wrongpassword")) 
+'''
 

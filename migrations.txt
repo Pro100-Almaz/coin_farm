@@ -1,0 +1,73 @@
+CREATE TABLE bonus (
+    bonus_id SERIAL PRIMARY KEY,
+    points INTEGER
+);
+
+CREATE TABLE condition (
+    condition_id SERIAL PRIMARY KEY,
+    condition TEXT,
+    create_time TIMESTAMP DEFAULT current_timestamp
+);
+
+CREATE TABLE miner (
+    miner_id SERIAL PRIMARY KEY,
+    price INTEGER,
+    level INTEGER DEFAULT 1,
+    point_per_hour INTEGER,
+    title TEXT,
+    description TEXT,
+    photo VARCHAR(50),
+    class VARCHAR(50),
+    condition_id INTEGER,
+    FOREIGN KEY (condition_id) REFERENCES condition(condition_id)
+);
+
+CREATE TABLE "user" (
+    user_id SERIAL PRIMARY KEY,
+    telegram_id BIGINT NOT NULL UNIQUE,
+    phone_number VARCHAR(20),
+    user_name VARCHAR(30),
+    profile_photo VARCHAR(50),
+    bonus_id INTEGER,
+    FOREIGN KEY (bonus_id) REFERENCES bonus(bonus_id),
+    last_login TIMESTAMP DEFAULT current_timestamp,
+    sign_up_date DATE DEFAULT current_date,
+    miner INTEGER,
+    FOREIGN KEY (miner) REFERENCES miner(miner_id)
+);
+
+CREATE TABLE points (
+    user_id INTEGER,
+    FOREIGN KEY (user_id) REFERENCES "user"(user_id),
+    points_total BIGINT,
+    points_per_hour INTEGER,
+    next_rise timestamp
+);
+
+CREATE TABLE subscribers (
+    user_id INTEGER,
+    FOREIGN KEY (user_id) REFERENCES "user"(user_id),
+    count INTEGER,
+    list_of_ids INTEGER[]
+);
+
+CREATE TABLE subscriptions (
+    user_id INTEGER,
+    FOREIGN KEY (user_id) REFERENCES "user"(user_id),
+    count INTEGER,
+    list_of_ids INTEGER[]
+);
+
+CREATE TABLE level_list (
+    level_id SERIAL PRIMARY KEY,
+    title VARCHAR(50),
+    description TEXT
+);
+
+CREATE TABLE level (
+    user_id INTEGER,
+    FOREIGN KEY (user_id) REFERENCES "user"(user_id),
+    level INTEGER,
+    FOREIGN KEY (level) REFERENCES level_list(level_id),
+    current_percent INTEGER
+);

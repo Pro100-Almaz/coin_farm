@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.models import User
+from app.routers.user.models import User
 from app.crud import create_item, get_item
 
 router = APIRouter()

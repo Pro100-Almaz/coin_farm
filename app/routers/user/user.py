@@ -52,5 +52,3 @@ async def create_user(new_user: UserCreate):
         )
 
     return {"Status": 200}
-
-

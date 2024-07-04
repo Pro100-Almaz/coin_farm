@@ -1,8 +1,13 @@
 from pydantic import BaseModel
 
 class UserCreate(BaseModel):
-    username: str
-    password: str
+    data: dict
+    # id: str
+    # username: str
+    # first_name: str
+    # last_name: str
+    # language_code: str
+    # allows_write_to_pm: bool
 
 class UserLogin(BaseModel):
     username: str
@@ -11,3 +16,6 @@ class UserLogin(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class TelegramLogin(BaseModel):
+    telegram_id: str

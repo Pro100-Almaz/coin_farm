@@ -4,6 +4,7 @@ from app.database import database
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.webhook import router as webhook_router
+from app.routers import user as user_router
 
 app = FastAPI()
 
@@ -15,6 +16,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(user_router.router)
 app.include_router(webhook_router, prefix="/webhook")
 
 
@@ -25,11 +27,6 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     await database.disconnect()
-
-
-@app.get("/")
-async def read_root():
-    return {"Hello": "World"}
 
 
 @app.get("/items/{item_id}")

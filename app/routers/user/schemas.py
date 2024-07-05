@@ -10,8 +10,8 @@ class UserCreate(BaseModel):
     # allows_write_to_pm: bool
 
 class UserLogin(BaseModel):
+    telegram_id: int
     username: str
-    password: str
 
 class Token(BaseModel):
     access_token: str

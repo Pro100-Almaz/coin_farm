@@ -27,6 +27,13 @@ def authenticate_user(telegram_id: str, password: str):
 
     return user
 
+def generate_token(telegram_id: str):
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": telegram_id}, expires_delta=access_token_expires
+    )
+
+    return access_token
 
 @router.post("/get_token", response_model=Token)
 async def login_for_access_token(telegram_login: TelegramLogin):
@@ -36,10 +43,9 @@ async def login_for_access_token(telegram_login: TelegramLogin):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid telegram_id"
         )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": telegram_id}, expires_delta=access_token_expires
-    )
+
+    access_token = generate_token(telegram_id)
+
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/refresh_token", response_model=Token)
@@ -57,8 +63,6 @@ async def refresh_access_token(token: str = Depends(oauth2_scheme)):
     except:
         raise credentials_exception
 
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": telegram_id}, expires_delta=access_token_expires
-    )
+    access_token = generate_token(telegram_id)
+
     return {"access_token": access_token, "token_type": "bearer"}

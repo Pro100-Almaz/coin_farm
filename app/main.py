@@ -27,14 +27,3 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     await database.disconnect()
-
-
-@app.get("/items/{item_id}")
-async def read_item(item_id: int, q: str | None):
-    return {"item_id": item_id, "q": q}
-
-
-@app.post("/send-data")
-async def read_root(data: Union[dict, None]):
-    print(data)
-    return {}

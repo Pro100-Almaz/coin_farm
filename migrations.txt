@@ -33,7 +33,8 @@ CREATE TABLE "user" (
     last_login TIMESTAMP DEFAULT current_timestamp,
     sign_up_date DATE DEFAULT current_date,
     miner INTEGER,
-    FOREIGN KEY (miner) REFERENCES miner(miner_id)
+    FOREIGN KEY (miner) REFERENCES miner(miner_id),
+    password VARCHAR(255)
 );
 
 CREATE TABLE points (
@@ -71,3 +72,8 @@ CREATE TABLE level (
     FOREIGN KEY (level) REFERENCES level_list(level_id),
     current_percent INTEGER
 );
+
+ALTER TABLE public."user"
+ADD CONSTRAINT unique_constraint_name UNIQUE (telegram_id, user_name);
+
+

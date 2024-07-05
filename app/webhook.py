@@ -1,4 +1,6 @@
-from fastapi import HTTPException, APIRouter
+from typing import Union
+
+from fastapi import HTTPException, APIRouter, Request
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
@@ -66,7 +68,7 @@ Dates will be announced in our announcement channel. Stay tuned!
 
     response = requests.post(url, json=payload)
     logging.info(response)
-    return {"status": "ok"}
+    return {"Status": "ok"}
 
 
 @router.on_event("startup")

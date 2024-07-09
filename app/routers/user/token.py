@@ -11,8 +11,6 @@ from app.database import database
 
 router = APIRouter()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="get_token")
-
 
 def authenticate_user(telegram_id: str, password: str):
     user = database.fetchrow(

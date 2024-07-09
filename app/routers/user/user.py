@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, status
 from asyncpg.exceptions import UniqueViolationError
 
 from .schemas import UserCreate, UserLogin
-from app.utils import create_access_token, verify_token, SECRET_KEY, ALGORITHM
+from app.utils import create_access_token
 
 from app.database import database
 
@@ -23,8 +23,8 @@ async def read_user(user: UserLogin):
     )
 
     if not user:
-        credentials_exception = HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+        return HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )

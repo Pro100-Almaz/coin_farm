@@ -19,3 +19,6 @@ class Token(BaseModel):
 
 class TelegramLogin(BaseModel):
     telegram_id: str
+
+class Subscriptions(BaseModel):
+    user_id: str

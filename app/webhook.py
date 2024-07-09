@@ -89,8 +89,3 @@ async def on_shutdown():
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail="Failed to delete webhook")
     logging.info("Webhook deleted")
-
-
-@router.get("/")
-async def root():
-    return {"message": "Hello World, you are at telegram webhook"}

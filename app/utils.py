@@ -6,6 +6,8 @@ from passlib.context import CryptContext
 import os
 import jwt
 
+load_dotenv()
+
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 ALGORITHM = os.getenv('ALGORITHM')
@@ -26,9 +28,9 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
 def verify_token(data: dict):
     try:
         payload = jwt.decode(data, SECRET_KEY, algorithms=[ALGORITHM])
-        telegram_id: str = payload.get("telegram_id")
-        if telegram_id is None:
-            return False
-        return True
+        expire = payload.get("exp")
+        if expire > datetime.utcnow():
+            return None
+        return payload
     except any:
-        return False
+        return {}

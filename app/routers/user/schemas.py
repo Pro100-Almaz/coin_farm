@@ -15,7 +15,12 @@ class UserLogin(BaseModel):
 
 class Token(BaseModel):
     access_token: str
-    token_type: str
+    user_id: int
+    telegram_id: int
+    username: str
+
+class User(BaseModel):
+    id: int
 
 class TelegramLogin(BaseModel):
     telegram_id: str

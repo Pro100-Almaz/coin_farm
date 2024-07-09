@@ -1,53 +1,37 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from datetime import timedelta
+from fastapi import APIRouter, HTTPException, status
 import jwt
 
-from .schemas import Token, TelegramLogin
-from app.utils import create_access_token, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from .schemas import Token
+from app.utils import create_access_token, SECRET_KEY, ALGORITHM
 
-from app.database import database
+from app.database import database, redis_database
 
 
 router = APIRouter()
 
 
-def authenticate_user(telegram_id: str, password: str):
-    user = database.fetchrow(
-        """
-        SELECT *
-        FROM public.user
-        WHERE telegram_id = $1 
-        """, telegram_id
-    )
-    if not user:
-        return None
-
-    return user
-
-def generate_token(telegram_id: str):
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": telegram_id}, expires_delta=access_token_expires
-    )
-
-    return access_token
-
-@router.post("/refresh_token", response_model=Token)
-async def refresh_access_token(token = None):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+@router.post("/refresh_token")
+async def refresh_access_token(token = Token):
+    token_old = redis_database.get_user_token(token.user_id)
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        telegram_id: str = payload.get("sub")
-        if telegram_id is None:
-            raise credentials_exception
+        payload = jwt.decode(token_old, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("telegram_id") == token.telegram_id and \
+            payload.get("username") == token.username and \
+            payload.get("user_id") == token.user_id:
+            token = create_access_token({"telegram_id": token.telegram_id, "username": token.username,
+                                         "user_id": token.user_id})
+            redis_database.set_user_token(token.user_id, token)
+        else:
+            return HTTPException(
+                    status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                    detail="Could not validate credentials",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
     except:
-        raise credentials_exception
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Wrong credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-    access_token = generate_token(telegram_id)
-
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"Status": 200, "token": token}

@@ -2,11 +2,11 @@ from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, status, Depends
 
-from .schemas import UserCreate, UserLogin, Subscribers, Subscriptions, UserPoints, UserLevel
+from .schemas import UserCreate, UserLogin, Subscribers, Subscriptions, UserPoints, UserLevel, User
 
 from app.utils import create_access_token
 from app.auth_bearer import JWTBearer
-from app.database import database
+from app.database import database, redis_database
 
 
 router = APIRouter()
@@ -19,20 +19,24 @@ async def read_user(user: UserLogin):
         UPDATE public.user
         SET last_login = $3
         WHERE telegram_id = $1 AND user_name = $2
-        RETURNING *
+        RETURNING user_id
         """, user.telegram_id, user.username, datetime.now()
     )
 
-    if not user_data:
+    user_id = int(user_data.get('user_id'))
+
+    if not user_id:
         return HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    payload = create_access_token({"telegram_id": user.telegram_id, "username": user.username})
+    token = create_access_token({"telegram_id": user.telegram_id, "username": user.username,
+                                 "user_id": user_id})
+    redis_database.set_user_token(user_id, token)
 
-    return {"token": payload, "user": user_data, "Status": "200"}
+    return {"token": token, "user_id": user_id, "Status": "200"}
 
 @router.post("/create_user")
 async def create_user(new_user: UserCreate):
@@ -86,9 +90,22 @@ async def create_user(new_user: UserCreate):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    token = create_access_token({"telegram_id": telegram_id, "username": telegram_username})
+    token = create_access_token({"telegram_id": telegram_id, "username": telegram_username, "user_id": user_id})
+    redis_database.set_user_token(user_id, token)
 
     return {"Status": 201, "user_id": user_id, "token": token}
+
+@router.get("/get_user", dependencies=[Depends(JWTBearer())], tags=["subscriptions"])
+async def get_subscriptions(user: User):
+    result = await database.fetchrow(
+        """
+        SELECT *
+        FROM public.user
+        WHERE user_id = $1
+        """, user.id
+    )
+
+    return result
 
 @router.get("/get_subscriptions", dependencies=[Depends(JWTBearer())], tags=["subscriptions"])
 async def get_subscriptions(subs: Subscriptions):

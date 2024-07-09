@@ -21,4 +21,13 @@ class TelegramLogin(BaseModel):
     telegram_id: str
 
 class Subscriptions(BaseModel):
-    user_id: str
+    user_id: int
+
+class Subscribers(BaseModel):
+    user_id: int
+
+class UserPoints(BaseModel):
+    user_id: int
+
+class UserLevel(BaseModel):
+    user_id: int

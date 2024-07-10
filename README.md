@@ -12,3 +12,8 @@ uvicorn app.main:app --reload
 ```
 3. Open local API docs [http://localhost:8000/docs](http://localhost:8000/docs)
 4. For further use, try to connect the ngrok software for accepting and sending request throw the https.
+
+## Getting Started
+1. Condition format for __miners.miner__ table:
+
+``````

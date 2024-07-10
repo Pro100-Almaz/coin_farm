@@ -1,16 +1,32 @@
+import hashlib
+import os
+import urllib.parse
 from datetime import datetime
+from dotenv import load_dotenv
 
 from fastapi import APIRouter, HTTPException, status, Depends
 
-from .schemas import UserCreate, UserLogin, Subscribers, Subscriptions, UserPoints, UserLevel, User
+from .schemas import UserCreate, UserLogin
 
 from app.utils import create_access_token
 from app.auth_bearer import JWTBearer
 from app.database import database, redis_database
 
 
+load_dotenv()
 router = APIRouter()
 
+
+def create_hashed_link(user_id, username, telegram_id, hash_length=20):
+    concatenated_string = f"{user_id}-{username}-{telegram_id}"
+
+    hashed_value = hashlib.sha256(concatenated_string.encode()).hexdigest()
+    truncated_hash = hashed_value[:hash_length]
+
+    base_link = os.getenv('SECRET_KEY') + "/referral_link/"
+    hashed_link = f"{base_link}{urllib.parse.quote(truncated_hash)}"
+
+    return hashed_link
 
 @router.post("/login_user")
 async def read_user(user: UserLogin):
@@ -61,6 +77,17 @@ async def create_user(new_user: UserCreate):
             """, telegram_id, telegram_username, datetime.now(), datetime.now(), first_name, last_name, language_code
         )
         user_id = int(result[0].get('user_id'))
+
+        hashed_link = create_hashed_link(user_id, telegram_username, telegram_id)
+
+        if hashed_link:
+            await database.execute(
+                """
+                UPDATE public.user 
+                SET referral_link = $1
+                WHERE user_id = $2
+                """, hashed_link, user_id
+            )
 
         await database.execute(
             """

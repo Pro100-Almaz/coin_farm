@@ -1,7 +1,7 @@
 from fastapi import APIRouter
+from .miner import router as miner_router
 
 router = APIRouter()
 
-router.include_router(user_router, prefix="/user")
-router.include_router(token_router, prefix="/token")
+router.include_router(miner_router)
 

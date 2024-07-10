@@ -4,8 +4,9 @@ from app.database import database
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.webhook import router as webhook_router
-from app.routers import user as user_router
 from app.images import router as image_router
+from app.routers import user as user_router
+from app.routers import miner as miner_router
 
 app = FastAPI()
 
@@ -17,8 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(user_router.router)
 app.include_router(image_router)
+app.include_router(user_router.router)
+app.include_router(miner_router.router)
 app.include_router(webhook_router, prefix="/webhook")
 
 

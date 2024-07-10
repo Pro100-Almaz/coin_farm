@@ -10,16 +10,16 @@ UPLOAD_DIRECTORY = "static/images"
 
 Path(UPLOAD_DIRECTORY).mkdir(parents=True, exist_ok=True)
 
-@router.post("/upload-image/")
-async def upload_image(file: UploadFile = File(...)):
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Invalid image file")
-
-    file_path = os.path.join(UPLOAD_DIRECTORY, file.filename)
-    with open(file_path, "wb") as f:
-        f.write(file.file.read())
-
-    return {"filename": file.filename}
+# @router.post("/upload-image/")
+# async def upload_image(file: UploadFile = File(...)):
+#     if not file.content_type.startswith("image/"):
+#         raise HTTPException(status_code=400, detail="Invalid image file")
+#
+#     file_path = os.path.join(UPLOAD_DIRECTORY, file.filename)
+#     with open(file_path, "wb") as f:
+#         f.write(file.file.read())
+#
+#     return {"filename": file.filename}
 
 @router.get("/images/{filename}")
 async def get_image(filename: str):

@@ -95,62 +95,76 @@ async def create_user(new_user: UserCreate):
 
     return {"Status": 201, "user_id": user_id, "token": token}
 
-@router.get("/get_user", dependencies=[Depends(JWTBearer())], tags=["subscriptions"])
-async def get_subscriptions(user: User):
+# @router.get("/get_user", dependencies=[Depends(JWTBearer())], tags=["subscriptions"])
+# async def get_subscriptions(user_id: int):
+#     result = await database.fetchrow(
+#         """
+#         SELECT *
+#         FROM public.user
+#         WHERE user_id = $1
+#         """, user_id
+#     )
+#
+#     return {"Status": 200, "result": result}
+
+@router.get("/get_user/{user_id}", dependencies=[Depends(JWTBearer())], tags=["subscriptions"])
+async def get_subscriptions(user_id: int):
     result = await database.fetchrow(
         """
         SELECT *
         FROM public.user
         WHERE user_id = $1
-        """, user.id
+        """, user_id
     )
 
-    return result
+    return {"Status": 200, "result": result}
 
-@router.get("/get_subscriptions", dependencies=[Depends(JWTBearer())], tags=["subscriptions"])
-async def get_subscriptions(subs: Subscriptions):
+@router.get("/get_subscriptions/{user_id}", dependencies=[Depends(JWTBearer())], tags=["subscriptions"])
+async def get_subscriptions(user_id: int):
     result = await database.fetchrow(
         """
         SELECT *
         FROM public.subscriptions
         WHERE user_id = $1
-        """, subs.user_id
+        """, user_id
     )
 
-    return result
+    return {"Status": 200, "result": result}
 
-@router.get("/get_subscribers", dependencies=[Depends(JWTBearer())], tags=["subscribers"])
-async def get_subscribers(subs: Subscribers):
+@router.post("/")
+
+@router.get("/get_subscribers/{user_id}", dependencies=[Depends(JWTBearer())], tags=["subscribers"])
+async def get_subscribers(user_id: int):
     result = await database.fetchrow(
         """
         SELECT *
         FROM public.subscriptions
         WHERE user_id = $1
-        """, subs.user_id
+        """, user_id
     )
 
-    return result
+    return {"Status": 200, "result": result}
 
-@router.get("/get_points", dependencies=[Depends(JWTBearer())], tags=["points"])
-async def get_points(user: UserPoints):
+@router.get("/get_points/{user_id}", dependencies=[Depends(JWTBearer())], tags=["points"])
+async def get_points(user_id: int):
     result = await database.fetchrow(
         """
         SELECT *
         FROM public.points
         WHERE user_id = $1
-        """, user.user_id
+        """, user_id
     )
 
-    return result
+    return {"Status": 200, "result": result}
 
-@router.get("/get_level", dependencies=[Depends(JWTBearer())], tags=["level"])
-async def get_level(user: UserLevel):
+@router.get("/get_level/{user_id}", dependencies=[Depends(JWTBearer())], tags=["level"])
+async def get_level(user_id: int):
     result = await database.fetchrow(
         """
         SELECT *
         FROM public.level
         WHERE user_id = $1
-        """, user.user_id
+        """, user_id
     )
 
-    return result
+    return {"Status": 200, "result": result}

@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Union
 from dotenv import load_dotenv
-from passlib.context import CryptContext
 
 import os
 import jwt

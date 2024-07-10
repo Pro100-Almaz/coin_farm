@@ -30,9 +30,12 @@ class Subscriptions(BaseModel):
 
 class Subscribers(BaseModel):
     user_id: int
+    gain_points: int
+
 
 class UserPoints(BaseModel):
     user_id: int
 
 class UserLevel(BaseModel):
     user_id: int
+

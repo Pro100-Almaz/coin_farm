@@ -28,7 +28,7 @@ async def refresh_access_token(token = Token):
                     headers={"WWW-Authenticate": "Bearer"},
                 )
     except:
-        raise HTTPException(
+        return HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Wrong credentials",
             headers={"WWW-Authenticate": "Bearer"},

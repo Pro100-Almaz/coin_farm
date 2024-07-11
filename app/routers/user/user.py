@@ -23,7 +23,7 @@ def create_hashed_link(user_id, username, telegram_id, hash_length=20):
     hashed_value = hashlib.sha256(concatenated_string.encode()).hexdigest()
     truncated_hash = hashed_value[:hash_length]
 
-    base_link = os.getenv('SECRET_KEY') + "/referral_link/"
+    base_link = str(os.getenv('SECRET_KEY')) + "/referral_link/"
     hashed_link = f"{base_link}{urllib.parse.quote(truncated_hash)}"
 
     return hashed_link
@@ -134,8 +134,8 @@ async def create_user(new_user: UserCreate):
 #
 #     return {"Status": 200, "result": result}
 
-@router.get("/get_user/{user_id}", dependencies=[Depends(JWTBearer())], tags=["subscriptions"])
-async def get_subscriptions(user_id: int):
+@router.get("/get_user/{user_id}", dependencies=[Depends(JWTBearer())], tags=["get_user"])
+async def get_user(user_id: int):
     result = await database.fetchrow(
         """
         SELECT *
@@ -146,31 +146,34 @@ async def get_subscriptions(user_id: int):
 
     return {"Status": 200, "result": result}
 
-@router.get("/get_subscriptions/{user_id}", dependencies=[Depends(JWTBearer())], tags=["subscriptions"])
-async def get_subscriptions(user_id: int):
+
+@router.get("/get_friend/{user_id}", dependencies=[Depends(JWTBearer())], tags=["User by which referral link, client "
+                                                                                "was called"])
+async def get_linked_friend(user_id: int):
     result = await database.fetchrow(
         """
-        SELECT *
-        FROM public.subscriptions
+        SELECT friend_id
+        FROM public.friend_to
         WHERE user_id = $1
         """, user_id
     )
 
     return {"Status": 200, "result": result}
 
-@router.post("/")
 
-@router.get("/get_subscribers/{user_id}", dependencies=[Depends(JWTBearer())], tags=["subscribers"])
-async def get_subscribers(user_id: int):
+@router.get("/get_friends/{user_id}", dependencies=[Depends(JWTBearer())], tags=["Clients which entered by referral "
+                                                                                 "link of the user"])
+async def get_subscribed_friends(user_id: int):
     result = await database.fetchrow(
         """
         SELECT *
-        FROM public.subscriptions
+        FROM public.friend_for
         WHERE user_id = $1
         """, user_id
     )
 
     return {"Status": 200, "result": result}
+
 
 @router.get("/get_points/{user_id}", dependencies=[Depends(JWTBearer())], tags=["points"])
 async def get_points(user_id: int):
@@ -183,6 +186,7 @@ async def get_points(user_id: int):
     )
 
     return {"Status": 200, "result": result}
+
 
 @router.get("/get_level/{user_id}", dependencies=[Depends(JWTBearer())], tags=["level"])
 async def get_level(user_id: int):

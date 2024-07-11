@@ -1,12 +1,9 @@
-from datetime import datetime
-
 from fastapi import APIRouter, HTTPException, status, Depends
 
 from .schemas import UserPoints
 
-from app.utils import create_access_token
 from app.auth_bearer import JWTBearer
-from app.database import database, redis_database
+from app.database import database
 
 
 router = APIRouter()

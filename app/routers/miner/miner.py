@@ -11,7 +11,7 @@ router = APIRouter()
 async def get_miners():
     miners = await database.fetch(
         """
-        SELECT *
+        SELECT price, title, description
         FROM miners.miner
         WHERE active = true
         """

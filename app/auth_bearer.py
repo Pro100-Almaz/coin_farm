@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import Request, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -20,9 +20,9 @@ def verify_jwt(jw_token: str) -> bool:
 
     try:
         payload = jwt.decode(jw_token, SECRET_KEY, algorithms=[ALGORITHM])
-        expire = payload.get("exp")
+        expire = datetime.utcfromtimestamp(payload.get("exp"))
 
-        if expire > datetime.utcnow():
+        if expire < datetime.utcnow():
             return is_token_valid
         return payload
 
@@ -41,11 +41,12 @@ class JWTBearer(HTTPBearer):
     async def __call__(self, request: Request):
         credentials: HTTPAuthorizationCredentials = await super(JWTBearer, self).__call__(request)
         if credentials:
+            data = verify_jwt(credentials.credentials)
             if not credentials.scheme == "Bearer":
                 raise HTTPException(status_code=403, detail="Invalid authentication scheme.")
-            if not verify_jwt(credentials.credentials):
+            if not data:
                 raise HTTPException(status_code=403, detail="Invalid token or expired token.")
-            return credentials.credentials
+            return data
         else:
             raise HTTPException(status_code=403, detail="Invalid authorization code.")
 

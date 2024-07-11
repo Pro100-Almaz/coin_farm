@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Dict
 
 from fastapi import APIRouter, HTTPException, status, Depends
 from httpx import request
@@ -13,8 +14,8 @@ from app.database import database, redis_database
 router = APIRouter()
 
 
-@router.post("{user_id}/buy_miner/{miner_id}", dependencies=[Depends(JWTBearer())], tags=["Miner"])
-async def read_user(user_id: int, miner_id: int):
+@router.post("/buy_miner/{miner_id}", tags=["Miner"])
+async def buy_miner(miner_id: int, token_data: Dict = Depends(JWTBearer())):
     # condition format: condition:value
     miner = await database.fetchrow(
         """
@@ -24,11 +25,13 @@ async def read_user(user_id: int, miner_id: int):
         """, miner_id
     )
 
+    user_id = token_data.get("user_id")
+
     miner_condition = miner.get("condition")
     if miner_condition:
         condition, required_value = miner_condition.split(":")
 
-        if condition == "minimum_points":
+        if condition == "minimum_point":
             user_points = await database.fetchrow(
                 """
                 SELECT points_total
@@ -44,7 +47,7 @@ async def read_user(user_id: int, miner_id: int):
                     headers={},
                 )
 
-        elif condition == "minimum_followers":
+        elif condition == "minimum_friends":
             user_friends = await database.fetchrow(
                 """
                 SELECT count
@@ -80,3 +83,6 @@ async def read_user(user_id: int, miner_id: int):
     )
 
     return {"Status": "200", "Details": "Miner successfully added into user account!"}
+
+# @router.post("/{user_id}/buy_miner/{miner_id}", dependencies=[Depends(JWTBearer())], tags=["Miner"])
+# async def buy_miner(user_id: int, miner_id: int):

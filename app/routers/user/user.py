@@ -2,11 +2,13 @@ import hashlib
 import os
 import urllib.parse
 from datetime import datetime
+from typing import Dict
+
 from dotenv import load_dotenv
 
 from fastapi import APIRouter, HTTPException, status, Depends
 
-from .schemas import UserCreate, UserLogin
+from .schemas import UserCreate, UserLogin, UserLevel
 
 from app.utils import create_access_token
 from app.auth_bearer import JWTBearer
@@ -109,6 +111,11 @@ async def create_user(new_user: UserCreate):
             INSERT INTO public.level (user_id, level, current_percent) VALUES ($1, 1, 0);
             """, user_id
         )
+        await database.execute(
+            """
+            INSERT INTO public.stamina (user_id) VALUES ($1);
+            """, user_id
+        )
     except Exception as e:
         print(e)
         return HTTPException(
@@ -135,7 +142,7 @@ async def create_user(new_user: UserCreate):
 #     return {"Status": 200, "result": result}
 
 
-@router.get("/get_user/{user_id}", dependencies=[Depends(JWTBearer())], tags=["default"])
+@router.get("/{user_id}", dependencies=[Depends(JWTBearer())], tags=["default"])
 async def get_user(user_id: int):
     result = await database.fetchrow(
         """
@@ -148,55 +155,101 @@ async def get_user(user_id: int):
     return {"Status": 200, "result": result}
 
 
-@router.get("/get_friend/{user_id}", dependencies=[Depends(JWTBearer())], tags=["user by which referral link, client "
-                                                                                "was called"])
-async def get_linked_friend(user_id: int):
+@router.get("/get_friend", tags=["user by which referral link, client was called"])
+async def get_linked_friend(token_data: Dict = Depends(JWTBearer())):
     result = await database.fetchrow(
         """
         SELECT friend_id
         FROM public.friend_to
         WHERE user_id = $1
-        """, user_id
+        """, token_data.get("user_id")
     )
 
     return {"Status": 200, "result": result}
 
 
-@router.get("/get_friends/{user_id}", dependencies=[Depends(JWTBearer())], tags=["clients which entered by referral "
-                                                                                 "link of the user"])
-async def get_subscribed_friends(user_id: int):
+@router.get("/get_friends", tags=["clients which entered by referral link of the user"])
+async def get_subscribed_friends(token_data: Dict = Depends(JWTBearer())):
     result = await database.fetchrow(
         """
         SELECT *
         FROM public.friend_for
         WHERE user_id = $1
-        """, user_id
+        """, token_data.get("user_id")
     )
 
     return {"Status": 200, "result": result}
 
 
-@router.get("/get_points/{user_id}", dependencies=[Depends(JWTBearer())], tags=["points"])
-async def get_points(user_id: int):
+@router.get("/get_points", tags=["points"])
+async def get_points(token_data: Dict = Depends(JWTBearer())):
     result = await database.fetchrow(
         """
         SELECT *
         FROM public.points
         WHERE user_id = $1
-        """, user_id
+        """, token_data.get("user_id")
     )
 
     return {"Status": 200, "result": result}
 
 
-@router.get("/get_level/{user_id}", dependencies=[Depends(JWTBearer())], tags=["level"])
-async def get_level(user_id: int):
+@router.get("/get_level", tags=["level"])
+async def get_level(token_data: Dict = Depends(JWTBearer())):
     result = await database.fetchrow(
         """
         SELECT *
-        FROM public.level
+        FROM public.level lvl
+        LEFT JOIN public.level_list lvl_l ON lvl.level = lvl_l.level_id
         WHERE user_id = $1
-        """, user_id
+        """, token_data.get("user_id")
+    )
+
+    return {"Status": 200, "result": result}
+
+
+@router.patch("/upgrade_level", tags=["level"])
+async def upgrade_level(token_data: Dict = Depends(JWTBearer()), user_data=UserLevel):
+    percent = (user_data.user_points // user_data.max_points) * 100
+    if percent > 100:
+        level_upgrade = user_data.current_lvl + (percent // 100)
+        percent = percent % 100
+    else:
+        level_upgrade = user_data.current_lvl
+
+    result = await database.fetchrow(
+        """
+        UPDATE public.level
+        SET level = $2, current_percent = $3
+        WHERE user_id = $1
+        """, token_data.get("user_id"), percent, level_upgrade
+    )
+
+    return {"Status": 200, "result": result}
+
+
+@router.get("/stamina", tags=["stamina"])
+async def get_stamina(token_data: Dict = Depends(JWTBearer())):
+    result = await database.fetchrow(
+        """
+        SELECT *
+        FROM public.stamina
+        WHERE user_id = $1
+        """, token_data.get("user_id")
+    )
+
+    return {"Status": 200, "result": result}
+
+
+@router.post("/upgrade_stamina", tags=["stamina"])
+async def upgrade_stamina(token_data: Dict = Depends(JWTBearer())):
+    result = await database.fetch(
+        """
+        UPDATE public.stamina
+        SET current_stamina = current_stamina + 500, upgrade_price = upgrade_price * 2
+        WHERE user_id = $1
+        RETURNING *
+        """, token_data.get("user_id")
     )
 
     return {"Status": 200, "result": result}

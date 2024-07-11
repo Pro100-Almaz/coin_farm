@@ -38,6 +38,10 @@ class Subscribers(BaseModel):
 class UserPoints(BaseModel):
     user_id: int
 
+
 class UserLevel(BaseModel):
-    user_id: int
+    user_points: int
+    max_points: int
+    current_lvl: int
+
 

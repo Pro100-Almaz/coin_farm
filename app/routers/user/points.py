@@ -1,3 +1,5 @@
+from typing import Dict
+
 from fastapi import APIRouter, HTTPException, status, Depends
 
 from .schemas import UserPoints
@@ -27,6 +29,33 @@ async def update_points(data: UserPoints):
         )
 
     return {"user_id": data.user_id, "Status": "204", "details": "Data updated successfully."}
+
+
+@router.post("/claim_miner_points", tags=["points"])
+async def claim_miner_points(token_data: Dict = Depends(JWTBearer())):
+    result = await database.fetchrow(
+        """
+        SELECT *
+        FROM public.points
+        WHERE user_id = $1
+        """, token_data.get("user_id")
+    )
+
+    return {"Status": 200, "result": result}
+
+
+@router.post("/upgrade_tap", tags=["tap"])
+async def upgrade_tap(token_data: Dict = Depends(JWTBearer())):
+    result = await database.fetch(
+        """
+        UPDATE public.points
+        SET points_per_click = points_per_click + 1, upgrade_price = upgrade_price * 2
+        WHERE user_id = $1
+        RETURNING *
+        """
+    )
+
+    return {"Status": 200, "result": result}
 
 # @router.patch("/add_points_per_hour", dependencies=[Depends(JWTBearer())])
 # async def update_points(data: UserPoints):

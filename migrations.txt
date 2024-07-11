@@ -95,7 +95,8 @@ CREATE TABLE miners.miner (
     deactivation_time TIMESTAMP DEFAULT NULL,
     active BOOLEAN DEFAULT TRUE,
     rise_coef_price INTEGER,
-    rise_coef_income INTEGER
+    rise_coef_income INTEGER,
+    type TEXT
 );
 
 CREATE TABLE miners.user_miner (
@@ -106,6 +107,47 @@ CREATE TABLE miners.user_miner (
     next_price INTEGER,
     next_level INTEGER DEFAULT 2,
     point_per_hour INTEGER,
+    next_point_per_hour INTEGER,
     active BOOLEAN DEFAULT TRUE
 );
 
+INSERT INTO miners.miner (price, point_per_hour, title, description, class, condition, rise_coef_price, rise_coef_income)
+VALUES  (24000, 5150, 'test3', 'description3', 'special', 'minimum_point:300', 50, 10),
+        (30000, 5000, 'test101', 'description!', 'special', 'minimum_friends:3', 50, 10),
+        (20000, 4000, 'test№', 'description№', 'special', 'minimum_point:300', 50, 10),
+        (44444, 5000, 'test13', 'description13', 'usual', 'NULL', 35, 5),
+        (15000, 3480, 'test!', 'description!', 'special', 'minimum_friends:3', 50, 10),
+        (40000, 4000, 'test*', 'unlocker_1', 'usual', 'minimum_point:300', 35, 5),
+        (25000, 2323, 'test**', 'unlocked_group_1', 'usual', 'minimum_point:300', 42, 7),
+        (50000, 2500, 'test**', 'unlocked_group_1', 'usual', 'minimum_point:300', 42, 7),
+        (30000, 2000, 'test**', 'unlocked_group_1', 'usual', 'minimum_point:300', 42, 7),
+        (25000, 1670, 'test*', 'unlocker_2', 'usual', 'minimum_point:300', 42,7),
+        (11200, 1620, 'test**', 'unlocked_group_2', 'usual', 'minimum_point:300', 42, 7),
+        (20000, 1500, 'test**', 'unlocked_group_2', 'usual', 'minimum_point:300', 42, 7),
+        (10000, 1300, 'test**', 'unlocked_group_2', 'usual', 'minimum_point:300', 42, 7),
+        (26970, 1550, 'test*', 'unlocker_3', 'usual', 'minimum_point:300',42,7),
+        (6200, 1050, 'test**', 'unlocked_group_3', 'usual', 'minimum_point:300', 42, 7),
+        (55555, 1000, 'test**', 'unlocked_group_3', 'usual', 'minimum_point:300', 42, 7),
+        (15000, 1000, 'test**', 'unlocked_group_3', 'usual', 'minimum_point:300', 42, 7),
+        (8888, 710, 'test!', 'description!', 'usual', 'minimum_friends:3', 42,7),
+        (4000, 600, 'test№', 'description№', 'usual', 'minimum_point:300', 42,7),
+        (11111, 730, 'test№', 'description№', 'usual', 'minimum_point:300', 42,7),
+        (30000, 500, 'test!', 'description!', 'usual', 'minimum_friends:3', 42, 7),
+        (9990, 529, 'test31', 'description31', 'usual', NULL, 35, 5),
+        (7980, 500, 'test23', 'description23', 'usual', NULL, 35, 5),
+        (3000, 400, 'test16', 'description16', 'usual', NULL, 35, 5),
+        (6000, 477, 'test27', 'description27', 'usual', NULL, 35, 5),
+        (8850, 460, 'test34', 'description34', 'usual', NULL, 35, 5),
+        (6100, 420, 'test1', 'description1', 'usual', NULL, 35, 5),
+        (15000, 300, 'test7', 'description7', 'usual', NULL, 35, 5),
+        (3400, 280, 'test36', 'description36', 'usual', NULL, 35, 5),
+        (1500, 200, 'test21', 'description21', 'usual', NULL, 35, 5),
+        (3000, 224, 'test24', 'description24', 'usual', NULL, 35, 5),
+        (2590, 210, 'test25', 'description25', 'usual', NULL, 35, 5),
+        (3111, 160, 'test29', 'description29', 'usual', NULL, 35, 5),
+        (1000, 100, 'test28', 'description28', 'usual', NULL, 35, 5),
+        (1330, 98, 'test26', 'description26', 'usual', NULL, 35, 5),
+        (500, 70, 'test35', 'description35', 'usual', NULL, 35, 5),
+        (790, 40, 'test37', 'description37', 'usual', NULL, 35, 5),
+        (100, 40, 'test33', 'description33', 'usual', NULL, 35, 5),
+        (400, 30, 'test38', 'description38', 'usual', NULL, 35, 5);

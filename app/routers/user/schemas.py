@@ -13,11 +13,13 @@ class UserLogin(BaseModel):
     telegram_id: int
     username: str
 
+
 class Token(BaseModel):
     access_token: str
     user_id: int
     telegram_id: int
     username: str
+
 
 class User(BaseModel):
     id: int

@@ -96,12 +96,12 @@ async def create_user(new_user: UserCreate):
         )
         await database.execute(
             """
-            INSERT INTO public.subscriptions (user_id, count, list_of_ids) VALUES ($1, 0, ARRAY[]::integer[]);
+            INSERT INTO public.friend_for (user_id, count, list_of_ids) VALUES ($1, 0, ARRAY[]::integer[]);
             """, user_id
         )
         await database.execute(
             """
-            INSERT INTO public.subscribers (user_id, count, list_of_ids) VALUES ($1, 0, ARRAY[]::integer[]);
+            INSERT INTO public.friend_to (user_id, friend_id) VALUES ($1, NULL);
             """, user_id
         )
         await database.execute(
@@ -134,7 +134,8 @@ async def create_user(new_user: UserCreate):
 #
 #     return {"Status": 200, "result": result}
 
-@router.get("/get_user/{user_id}", dependencies=[Depends(JWTBearer())], tags=["get_user"])
+
+@router.get("/get_user/{user_id}", dependencies=[Depends(JWTBearer())], tags=["default"])
 async def get_user(user_id: int):
     result = await database.fetchrow(
         """
@@ -147,7 +148,7 @@ async def get_user(user_id: int):
     return {"Status": 200, "result": result}
 
 
-@router.get("/get_friend/{user_id}", dependencies=[Depends(JWTBearer())], tags=["User by which referral link, client "
+@router.get("/get_friend/{user_id}", dependencies=[Depends(JWTBearer())], tags=["user by which referral link, client "
                                                                                 "was called"])
 async def get_linked_friend(user_id: int):
     result = await database.fetchrow(
@@ -161,7 +162,7 @@ async def get_linked_friend(user_id: int):
     return {"Status": 200, "result": result}
 
 
-@router.get("/get_friends/{user_id}", dependencies=[Depends(JWTBearer())], tags=["Clients which entered by referral "
+@router.get("/get_friends/{user_id}", dependencies=[Depends(JWTBearer())], tags=["clients which entered by referral "
                                                                                  "link of the user"])
 async def get_subscribed_friends(user_id: int):
     result = await database.fetchrow(

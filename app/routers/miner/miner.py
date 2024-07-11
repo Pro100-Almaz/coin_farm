@@ -7,7 +7,7 @@ from app.database import database
 router = APIRouter()
 
 
-@router.get("/miners", dependencies=[Depends(JWTBearer())])
+@router.get("/miners", dependencies=[Depends(JWTBearer())], tags=["Miner"])
 async def get_miners():
     miners = await database.fetch(
         """
@@ -26,7 +26,8 @@ async def get_miners():
 
     return {"miners": miners, "Status": "200"}
 
-@router.get("/miner/{miner_id}", dependencies=[Depends(JWTBearer())])
+
+@router.get("/miner/{miner_id}", dependencies=[Depends(JWTBearer())], tags=["Miner"])
 async def get_miners(miner_id: int):
     miner = await database.fetchrow(
         """

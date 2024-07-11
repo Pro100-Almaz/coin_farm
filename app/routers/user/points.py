@@ -12,7 +12,7 @@ from app.database import database, redis_database
 router = APIRouter()
 
 
-@router.patch("/update_points", dependencies=[Depends(JWTBearer())])
+@router.patch("/update_points", dependencies=[Depends(JWTBearer())], tags=["points"])
 async def update_points(data: UserPoints):
     try:
         await database.execute(

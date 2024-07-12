@@ -54,7 +54,7 @@ async def read_user(user: UserLogin):
                                  "user_id": user_id})
     redis_database.set_user_token(user_id, token)
 
-    return {"token": token, "user_id": user_id, "Status": "200"}
+    return {"token": token, "user_id": user_id, "Status": "200", "username": user.username}
 
 @router.post("/create_user")
 async def create_user(new_user: UserCreate):
@@ -127,7 +127,7 @@ async def create_user(new_user: UserCreate):
     token = create_access_token({"telegram_id": telegram_id, "username": telegram_username, "user_id": user_id})
     redis_database.set_user_token(user_id, token)
 
-    return {"Status": 201, "user_id": user_id, "token": token}
+    return {"Status": 201, "user_id": user_id, "token": token, "username": telegram_username}
 
 # @router.get("/get_user", dependencies=[Depends(JWTBearer())], tags=["subscriptions"])
 # async def get_subscriptions(user_id: int):

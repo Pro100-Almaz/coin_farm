@@ -32,7 +32,7 @@ async def webhook(update: Update):
     reply_markup = {
         "inline_keyboard": [[{
             "text": "go to game",
-            "web_app": {"url":"https://pro100-almaz.github.io/smart_analytics/"}
+            "web_app": {"url":"https://f076-89-107-97-177.ngrok-free.app/tma-project"}
         }]]
     }
 

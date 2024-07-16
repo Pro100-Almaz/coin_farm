@@ -3,29 +3,28 @@ from pydantic import BaseModel
 class User(BaseModel):
     data: dict
 
-    model_config = {
-        "json_schema_extra": {
+    class Config:
+        schema_extra = {
             "examples": [
                 {
-                    "dict": {
-                        "id": str,
-                        "username": str,
-                        "first_name": str,
-                        "last_name": str,
-                        "language_code": str,
-                        "allows_write_to_pm": bool
+                    "data": {
+                        "id": "user_id",
+                        "username": "user_name",
+                        "first_name": "First",
+                        "last_name": "Last",
+                        "language_code": "en",
+                        "allows_write_to_pm": True
                     }
                 }
             ]
         }
-    }
 
 class UserLogin(BaseModel):
     telegram_id: int
     username: str
 
-    model_config = {
-        "json_schema_extra": {
+    class Config:
+        schema_extra = {
             "examples": [
                 {
                     "telegram_id": int,
@@ -33,7 +32,6 @@ class UserLogin(BaseModel):
                 }
             ]
         }
-    }
 
 
 class Token(BaseModel):
@@ -62,5 +60,3 @@ class UserLevel(BaseModel):
     user_points: int
     max_points: int
     current_lvl: int
-
-

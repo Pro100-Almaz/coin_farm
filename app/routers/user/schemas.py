@@ -1,17 +1,39 @@
 from pydantic import BaseModel
 
-class UserCreate(BaseModel):
+class User(BaseModel):
     data: dict
-    # id: str
-    # username: str
-    # first_name: str
-    # last_name: str
-    # language_code: str
-    # allows_write_to_pm: bool
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "dict": {
+                        "id": str,
+                        "username": str,
+                        "first_name": str,
+                        "last_name": str,
+                        "language_code": str,
+                        "allows_write_to_pm": bool
+                    }
+                }
+            ]
+        }
+    }
 
 class UserLogin(BaseModel):
     telegram_id: int
     username: str
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "telegram_id": int,
+                    "username": str
+                }
+            ]
+        }
+    }
 
 
 class Token(BaseModel):
@@ -20,9 +42,6 @@ class Token(BaseModel):
     telegram_id: int
     username: str
 
-
-class User(BaseModel):
-    id: int
 
 class TelegramLogin(BaseModel):
     telegram_id: str

@@ -22,7 +22,7 @@ async def update_points(data: UserPoints):
             """, data.user_id, data.gain_points
         )
     except:
-        return HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},

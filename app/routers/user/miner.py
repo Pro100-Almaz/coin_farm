@@ -36,7 +36,7 @@ async def buy_miner(miner_id: int, token_data: Dict = Depends(JWTBearer())):
             )
 
             if user_points < int(required_value):
-                return HTTPException(
+                raise HTTPException(
                     status_code=status.HTTP_412_PRECONDITION_FAILED,
                     detail="User points is not facing required amount!",
                     headers={},

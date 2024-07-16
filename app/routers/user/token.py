@@ -21,13 +21,13 @@ async def refresh_access_token(token: Token):
                                          "user_id": token.user_id})
             redis_database.set_user_token(token.user_id, token)
         else:
-            return HTTPException(
+            raise HTTPException(
                 status_code=status.HTTP_406_NOT_ACCEPTABLE,
                 detail="Could not validate credentials",
                 headers={"WWW-Authenticate": "Bearer"},
             )
     except:
-        return HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Wrong credentials",
             headers={"WWW-Authenticate": "Bearer"},

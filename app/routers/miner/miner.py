@@ -31,7 +31,7 @@ async def get_miners(token_data: Dict = Depends(JWTBearer())):
     )
 
     if not miners:
-        return HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Could not find any miners.",
             headers={"WWW-Authenticate": "Bearer"},
@@ -63,7 +63,7 @@ async def get_miner(token_data: Dict = Depends(JWTBearer()), miner_type: str = N
     )
 
     if not miners:
-        return HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Could not find any miners.",
             headers={"WWW-Authenticate": "Bearer"},

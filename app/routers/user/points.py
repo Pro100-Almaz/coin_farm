@@ -11,15 +11,16 @@ from app.database import database
 router = APIRouter()
 
 
-@router.patch("/update_points", dependencies=[Depends(JWTBearer())], tags=["points"])
-async def update_points(data: UserPoints):
+@router.patch("/update_points", tags=["points"])
+async def update_points(data: UserPoints, token_data: Dict = Depends(JWTBearer())):
+    print(data)
     try:
         await database.execute(
             """
             UPDATE public.points
             SET points_total = $2
             WHERE user_id = $1 
-            """, data.user_id, data.gain_points
+            """, token_data.get("user_id"), data.gain_points
         )
     except:
         raise HTTPException(
@@ -28,10 +29,10 @@ async def update_points(data: UserPoints):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    return {"user_id": data.user_id, "Status": "204", "details": "Data updated successfully."}
+    return {"user_id": token_data.get("user_id"), "Status": "204", "details": "Data updated successfully."}
 
 
-@router.post("/claim_miner_points", tags=["points"])
+@router.get("/claim_miner_points", tags=["points"])
 async def claim_miner_points(token_data: Dict = Depends(JWTBearer())):
     result = await database.fetchrow(
         """

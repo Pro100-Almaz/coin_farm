@@ -198,7 +198,7 @@ async def get_level(token_data: Dict = Depends(JWTBearer())):
 
 
 @router.patch("/upgrade_level", tags=["level"])
-async def upgrade_level(token_data: Dict = Depends(JWTBearer()), user_data=UserLevel):
+async def upgrade_level(user_data: UserLevel, token_data: Dict = Depends(JWTBearer())):
     percent = (user_data.user_points // user_data.max_points) * 100
     if percent > 100:
         level_upgrade = user_data.current_lvl + (percent // 100)

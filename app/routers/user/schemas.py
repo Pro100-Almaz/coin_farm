@@ -3,35 +3,9 @@ from pydantic import BaseModel
 class User(BaseModel):
     data: dict
 
-    class Config:
-        schema_extra = {
-            "examples": [
-                {
-                    "data": {
-                        "id": "user_id",
-                        "username": "user_name",
-                        "first_name": "First",
-                        "last_name": "Last",
-                        "language_code": "en",
-                        "allows_write_to_pm": True
-                    }
-                }
-            ]
-        }
-
 class UserLogin(BaseModel):
     telegram_id: int
     username: str
-
-    class Config:
-        schema_extra = {
-            "examples": [
-                {
-                    "telegram_id": int,
-                    "username": str
-                }
-            ]
-        }
 
 
 class Token(BaseModel):
@@ -53,8 +27,7 @@ class Subscribers(BaseModel):
 
 
 class UserPoints(BaseModel):
-    user_id: int
-
+    gain_points: int | float
 
 class UserLevel(BaseModel):
     user_points: int

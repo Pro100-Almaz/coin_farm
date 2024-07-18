@@ -15,9 +15,14 @@ uvicorn app.main:app --reload
 
 ## Description of the project mechanics 
 There are 3 main parameters in this game:
+
 	**Price**
+ 
 	**Points per hour**
+ 
 	**Followers**
+
+ 
 **Price** provides information about the cost of purchase for specific item in the game, as well as price for its upgrade. **Points per hour** is the metric to measure the income that such item gives. By buying various cards and upgrading them player gain option to unlock new cards or upgrades for current cards, when enough game currency is collected player will be transferred to the next league. There will be 9 leagues in the start of the game: 
 
 **NPC**

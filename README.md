@@ -13,11 +13,6 @@ uvicorn app.main:app --reload
 3. Open local API docs [http://localhost:8000/docs](http://localhost:8000/docs)
 4. For further use, try to connect the ngrok software for accepting and sending request throw the https.
 
-## Description
-1. Condition format for __miners.miner__ table:
-
-``````
-
 ## Description of the project mechanics 
 1. There are 3 main parameters in this game:
 	**Price**
@@ -35,6 +30,15 @@ uvicorn app.main:app --reload
 **Giga meme**
 **G.O.A.T.**
 
-```_Followers will be designed later, for now its not important_```
+*Followers will be designed later, for now its not important*
 
 Formulas for increase in price and points per hour will be provided personally.
+
+
+
+
+## Description
+1. Condition format for __miners.miner__ table:
+
+``````
+

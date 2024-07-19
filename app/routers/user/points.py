@@ -13,7 +13,6 @@ router = APIRouter()
 
 @router.patch("/update_points", tags=["points"])
 async def update_points(data: UserPoints, token_data: Dict = Depends(JWTBearer())):
-    print(data)
     try:
         await database.execute(
             """

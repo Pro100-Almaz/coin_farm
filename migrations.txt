@@ -37,16 +37,22 @@ CREATE TABLE "user" (
     first_name VARCHAR(50),
     last_name VARCHAR(50),
     language_code VARCHAR(2),
-    referral_link VARCHAR(20)
+    referral_link VARCHAR(150)
 );
+
 
 CREATE TABLE points (
     user_id INTEGER,
     FOREIGN KEY (user_id) REFERENCES "user"(user_id),
     points_total BIGINT,
     points_per_hour INTEGER,
-    next_rise timestamp
+    points_per_click INTEGER DEFAULT 1,
+    next_rise timestamp,
+    upgrade_price INTEGER DEFAULT 1000,
+    accumulated_points INTEGER,
+    rise_count INTEGER DEFAULT 0
 );
+
 
 CREATE TABLE friend_for (
     user_id INTEGER,
@@ -64,7 +70,8 @@ CREATE TABLE friend_to (
 CREATE TABLE level_list (
     level_id SERIAL PRIMARY KEY,
     title VARCHAR(50),
-    description TEXT
+    description TEXT,
+    requirement varchar(50)
 );
 
 CREATE TABLE level (
@@ -73,6 +80,14 @@ CREATE TABLE level (
     level INTEGER,
     FOREIGN KEY (level) REFERENCES level_list(level_id),
     current_percent INTEGER
+);
+
+CREATE TABLE stamina (
+    user_id INTEGER,
+    FOREIGN KEY (user_id) REFERENCES "user"(user_id),
+    current_stamina INTEGER DEFAULT 1000,
+    upgrade_price INTEGER DEFAULT 1000,
+    upgrade_stamina INTEGER DEFAULT 500
 );
 
 ALTER TABLE public."user"
@@ -105,11 +120,12 @@ CREATE TABLE miners.user_miner (
     miner_id INTEGER,
     FOREIGN KEY (miner_id) REFERENCES miners.miner(miner_id),
     next_price INTEGER,
-    next_level INTEGER DEFAULT 2,
+    level INTEGER DEFAULT 1,
     point_per_hour INTEGER,
     next_point_per_hour INTEGER,
     active BOOLEAN DEFAULT TRUE
 );
+
 
 INSERT INTO miners.miner (price, point_per_hour, title, description, class, condition, rise_coef_price, rise_coef_income)
 VALUES  (24000, 5150, 'test3', 'description3', 'special', 'minimum_point:300', 50, 10),

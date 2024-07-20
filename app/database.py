@@ -45,6 +45,12 @@ class RedisDatabase:
     def set_user_token(self, user_id, token):
         return self.r.set(f"{user_id}:session", token)
 
+    def set(self, key, value):
+        return self.r.set(key, value)
+
+    def get(self, key):
+        return self.r.get(key)
+
 
 database = Database()
 redis_database = RedisDatabase()

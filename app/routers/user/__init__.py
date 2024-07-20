@@ -7,5 +7,5 @@ router = APIRouter()
 
 router.include_router(user_router, prefix="/user")
 router.include_router(token_router, prefix="/token")
-router.include_router(points_router, prefix="/user")
+router.include_router(points_router, prefix="/points")
 

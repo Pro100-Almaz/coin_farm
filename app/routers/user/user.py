@@ -30,7 +30,7 @@ def create_hashed_link(user_id, username, telegram_id, hash_length=30):
 
     return hashed_link
 
-@router.post("/login_user")
+@router.post("/login")
 async def login_user(user: User):
     telegram_id = user.data.get("id")
     username = user.data.get("username")
@@ -40,26 +40,42 @@ async def login_user(user: User):
         UPDATE public.user
         SET last_login = $3
         WHERE telegram_id = $1 AND user_name = $2
-        RETURNING user_id
+        RETURNING user_id, last_logout
         """, telegram_id, username, datetime.now()
     )
 
-    user_id = int(user_data.get('user_id'))
-
-    if not user_id:
+    if not user_data:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    user_id = int(user_data.get('user_id'))
+
+    user_points = await database.fetchrow(
+        """
+        SELECT *
+        FROM public.points
+        WHERE user_id = $1
+        """, user_id
+    )
+
+    user_offline_period = (datetime.now() - user_data.get('last_logout')).total_seconds()
+
+    if  user_offline_period < 10800:
+        total_points = user_points.get('points_total') + int(user_offline_period *
+                                                          (user_points.get('points_per_minute') // 60))
+    else:
+        total_points = user_points.get('points_total') + user_points.get('points_per_minute') * 180
+
     token = create_access_token({"telegram_id": telegram_id, "username": username,
                                  "user_id": user_id})
     redis_database.set_user_token(user_id, token)
 
-    return {"token": token, "user_id": user_id, "Status": "200", "username": username}
+    return {"token": token, "user_id": user_id, "Status": "200", "username": username, "total_points": total_points}
 
-@router.post("/create_user")
+@router.post("/create")
 async def create_user(new_user: User):
     telegram_id = new_user.data.get("id")
     telegram_username = new_user.data.get("username")
@@ -129,6 +145,11 @@ async def create_user(new_user: User):
     redis_database.set_user_token(user_id, token)
 
     return {"Status": 201, "user_id": user_id, "token": token, "username": telegram_username}
+
+
+@router.post("/logout", dependencies=[Depends(JWTBearer())], tags=["default"])
+async def logout_user():
+    return True
 
 
 @router.get("/{user_id}", dependencies=[Depends(JWTBearer())], tags=["default"])

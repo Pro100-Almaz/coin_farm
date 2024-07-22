@@ -1,14 +1,11 @@
-import time
-from distutils.util import execute
 from typing import Dict
 
 from fastapi import APIRouter, HTTPException, status, Depends
-from fastapi.responses import StreamingResponse
 
 from .schemas import UserPoints
 
 from app.auth_bearer import JWTBearer
-from app.database import database, redis_database
+from app.database import database
 
 
 router = APIRouter()
@@ -59,34 +56,6 @@ async def upgrade_tap(token_data: Dict = Depends(JWTBearer())):
 
     return {"Status": 200, "result": result}
 
-
-
-async def event_stream(user_id: int):
-    try:
-        user_points = await database.fetchrow(
-            """
-            SELECT points_per_minute
-            FROM public.points
-            WHERE user_id = $1 AND user_is_online = true
-            """, user_id
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Could not validate credentials"
-        )
-
-    points_per_second = int(user_points.get("points_per_minute")) // 60
-
-    while True:
-        print(f"Sending data {points_per_second}")
-        yield bytes(points_per_second)
-        time.sleep(1)
-
-
-@router.get("/sse")
-async def sse_endpoint():
-    return StreamingResponse(event_stream(1), media_type="text/event-stream")
 
 # @router.patch("/add_points_per_hour", dependencies=[Depends(JWTBearer())])
 # async def update_points(data: UserPoints):

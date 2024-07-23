@@ -27,6 +27,13 @@ class Update(BaseModel):
 async def webhook(update: Update):
     logging.info(update)
 
+    if update.message.get("text").startswith("/start refId"):
+        ref_id = update.message.get("text").split("")[2][5:]
+
+        pass
+
+
+
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
 
     reply_markup = {

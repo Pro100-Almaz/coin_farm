@@ -21,17 +21,6 @@ load_dotenv()
 router = APIRouter()
 
 
-def create_hashed_link(user_id, username, telegram_id, hash_length=30):
-    concatenated_string = f"{user_id}-{username}-{telegram_id}"
-
-    hashed_value = hashlib.sha256(concatenated_string.encode()).hexdigest()
-    truncated_hash = hashed_value[:hash_length]
-
-    base_link = str(os.getenv('BASE_URL')) + "/referral_link/"
-    hashed_link = f"{base_link}{urllib.parse.quote(truncated_hash)}"
-
-    return hashed_link
-
 @router.post("/login")
 async def login_user(user: User):
     telegram_id = user.data.get("id")
@@ -101,7 +90,7 @@ async def create_user(new_user: User):
         )
         user_id = int(result[0].get('user_id'))
 
-        hashed_link = create_hashed_link(user_id, telegram_username, telegram_id)
+        hashed_link = "https://t.me/practically_bot?start=refId" + str(telegram_id)
 
         if hashed_link:
             await database.execute(
@@ -117,26 +106,31 @@ async def create_user(new_user: User):
             INSERT INTO public.points (user_id, points_total, points_per_hour, next_rise) VALUES ($1, 0, 0, $2);
             """, user_id, datetime.now()
         )
+
         await database.execute(
             """
             INSERT INTO public.friend_for (user_id, count, list_of_ids) VALUES ($1, 0, ARRAY[]::integer[]);
             """, user_id
         )
+
         await database.execute(
             """
             INSERT INTO public.friend_to (user_id, friend_id) VALUES ($1, NULL);
             """, user_id
         )
+
         await database.execute(
             """
             INSERT INTO public.level (user_id, level, current_percent) VALUES ($1, 1, 0);
             """, user_id
         )
+
         await database.execute(
             """
             INSERT INTO public.stamina (user_id) VALUES ($1);
             """, user_id
         )
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

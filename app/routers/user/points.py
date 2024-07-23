@@ -30,19 +30,6 @@ async def update_points(data: UserPoints, token_data: Dict = Depends(JWTBearer()
     return {"user_id": token_data.get("user_id"), "Status": "204", "details": "Data updated successfully."}
 
 
-@router.get("/claim_miner_points", tags=["points"])
-async def claim_miner_points(token_data: Dict = Depends(JWTBearer())):
-    result = await database.fetchrow(
-        """
-        SELECT *
-        FROM public.points
-        WHERE user_id = $1
-        """, token_data.get("user_id")
-    )
-
-    return {"Status": 200, "result": result}
-
-
 @router.post("/upgrade_tap", tags=["tap"])
 async def upgrade_tap(token_data: Dict = Depends(JWTBearer())):
     result = await database.fetch(
@@ -51,7 +38,7 @@ async def upgrade_tap(token_data: Dict = Depends(JWTBearer())):
         SET points_per_click = points_per_click + 1, upgrade_price = upgrade_price * 2
         WHERE user_id = $1
         RETURNING *
-        """
+        """, token_data.get('user_id')
     )
 
     return {"Status": 200, "result": result}

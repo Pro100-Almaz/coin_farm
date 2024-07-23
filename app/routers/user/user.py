@@ -1,12 +1,14 @@
 import hashlib
 import os
 import urllib.parse
+from cgitb import reset
 from datetime import datetime
 from typing import Dict
 
 from dotenv import load_dotenv
 
 from fastapi import APIRouter, HTTPException, status, Depends
+from starlette.status import HTTP_409_CONFLICT
 
 from .schemas import User, UserLevel
 
@@ -218,22 +220,33 @@ async def get_level(token_data: Dict = Depends(JWTBearer())):
     return {"Status": 200, "result": result}
 
 
+@router.get("/get_level_list", tags=["level"])
+async def get_level_list():
+    result = await database.fetch(
+        """
+        SELECT *
+        FROM public.level_list
+        """
+    )
+
+    if not result:
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no list of levels.")
+
+    return {"Status": 200, "result": result}
+
+
 @router.patch("/upgrade_level", tags=["level"])
 async def upgrade_level(user_data: UserLevel, token_data: Dict = Depends(JWTBearer())):
-    percent = (user_data.user_points // user_data.max_points) * 100
-    if percent > 100:
-        level_upgrade = user_data.current_lvl + (percent // 100)
-        percent = percent % 100
-    else:
-        level_upgrade = user_data.current_lvl
-
     result = await database.fetchrow(
         """
         UPDATE public.level
-        SET level = $2, current_percent = $3
+        SET level = $2
         WHERE user_id = $1
-        """, token_data.get("user_id"), percent, level_upgrade
+        """, token_data.get("user_id"), user_data.new_user_lvl
     )
+
+    if not result:
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no level id in level list.")
 
     return {"Status": 200, "result": result}
 
@@ -247,6 +260,9 @@ async def get_stamina(token_data: Dict = Depends(JWTBearer())):
         WHERE user_id = $1
         """, token_data.get("user_id")
     )
+
+    if not result:
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no such user.")
 
     return {"Status": 200, "result": result}
 

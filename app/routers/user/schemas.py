@@ -30,6 +30,4 @@ class UserPoints(BaseModel):
     gain_points: int | float
 
 class UserLevel(BaseModel):
-    user_points: int
-    max_points: int
-    current_lvl: int
+    new_user_lvl: int

@@ -24,7 +24,7 @@ async def login_user(user: User):
     user_data = await database.fetchrow(
         """
         UPDATE public.user
-        SET last_login = $3
+        SET last_login = $3, active = true
         WHERE telegram_id = $1 AND user_name = $2
         RETURNING user_id, last_logout
         """, telegram_id, username, datetime.now()
@@ -84,7 +84,7 @@ async def get_user(user_id: int):
 async def get_points(token_data: Dict = Depends(JWTBearer())):
     result = await database.fetchrow(
         """
-        SELECT points_total, points_per_minute, points_per_click, upgrade_price
+        SELECT points_total, points_per_minute, points_per_click, click_upgrade_price
         FROM public.points
         WHERE user_id = $1
         """, token_data.get("user_id")
@@ -156,6 +156,20 @@ async def get_stamina(token_data: Dict = Depends(JWTBearer())):
 
 @router.post("/upgrade_stamina", tags=["stamina"])
 async def upgrade_stamina(token_data: Dict = Depends(JWTBearer())):
+    result = await database.fetch(
+        """
+        UPDATE public.stamina
+        SET current_stamina = current_stamina + 500, upgrade_price = upgrade_price * 2
+        WHERE user_id = $1
+        RETURNING *
+        """, token_data.get("user_id")
+    )
+
+    return {"Status": 200, "result": result}
+
+
+@router.get("/refresh_stamina", tags=["stamina"])
+async def refresh_stamina(token_data: Dict = Depends(JWTBearer())):
     result = await database.fetch(
         """
         UPDATE public.stamina

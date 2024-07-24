@@ -69,7 +69,7 @@ async def get_miner(token_data: Dict = Depends(JWTBearer()), miner_type: str = N
 
     return {"miners": miners, "Status": "200", "length": len(miners)}
 
-@router.post("/buy_miner/{miner_id}", tags=["Miner"])
+@router.post("/miner/buy/{miner_id}", tags=["Miner"])
 async def buy_miner(miner_id: int, token_data: Dict = Depends(JWTBearer())):
     # condition format: condition:value
     miner = await database.fetchrow(

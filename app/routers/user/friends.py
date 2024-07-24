@@ -11,7 +11,7 @@ from app.database import database
 router = APIRouter()
 
 
-@router.get("/friends")
+@router.get("/friends", tags=["referral"])
 async def get_friends(token_data: Dict = Depends(JWTBearer())):
     user_friends = await database.fetch(
         """

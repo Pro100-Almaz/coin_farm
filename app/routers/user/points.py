@@ -119,6 +119,7 @@ async def request_daily_points(token_data: Dict = Depends(JWTBearer())):
     return {"Status": 200, "bonus_points": bonus_points, "user_status": user_status}
 
 
+
 # @router.patch("/add_points_per_hour", dependencies=[Depends(JWTBearer())])
 # async def update_points(data: UserPoints):
 #     try:

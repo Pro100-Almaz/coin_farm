@@ -1,15 +1,9 @@
-import hashlib
-import os
-import urllib.parse
-from cgitb import reset
 from datetime import datetime
-from itertools import accumulate
 from typing import Dict
 
 from dotenv import load_dotenv
 
 from fastapi import APIRouter, HTTPException, status, Depends
-from starlette.status import HTTP_409_CONFLICT
 
 from .schemas import User, UserLevel
 
@@ -67,76 +61,6 @@ async def login_user(user: User):
     return {"token": token, "user_id": user_id, "Status": "200", "username": username,
             "accumulated_points": accumulated_points}
 
-@router.post("/create")
-async def create_user(new_user: User):
-    telegram_id = new_user.data.get("id")
-    telegram_username = new_user.data.get("username")
-    first_name: str = new_user.data.get("first_name")
-    last_name: str = new_user.data.get("last_name")
-    language_code: str = new_user.data.get("language_code")
-
-    if not telegram_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid telegram_id"
-        )
-
-    try:
-        result = await database.fetch(
-            """
-            INSERT INTO public.user (telegram_id, user_name, last_login, sign_up_date, first_name, last_name, language_code)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            RETURNING user_id
-            """, telegram_id, telegram_username, datetime.now(), datetime.now(), first_name, last_name, language_code
-        )
-        user_id = int(result[0].get('user_id'))
-
-        hashed_link = "https://t.me/practically_bot?start=refId" + str(telegram_id)
-
-        if hashed_link:
-            await database.execute(
-                """
-                UPDATE public.user 
-                SET referral_link = $1
-                WHERE user_id = $2
-                """, hashed_link, user_id
-            )
-
-        await database.execute(
-            """
-            INSERT INTO public.points (user_id, points_total, points_per_hour, next_rise) VALUES ($1, 0, 0, $2);
-            """, user_id, datetime.now()
-        )
-
-        await database.execute(
-            """
-            INSERT INTO public.friend_for (user_id, count, list_of_ids) VALUES ($1, 0, ARRAY[]::integer[]);
-            """, user_id
-        )
-
-        await database.execute(
-            """
-            INSERT INTO public.level (user_id, level, current_percent) VALUES ($1, 1, 0);
-            """, user_id
-        )
-
-        await database.execute(
-            """
-            INSERT INTO public.stamina (user_id) VALUES ($1);
-            """, user_id
-        )
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="User already exists"
-        )
-
-    token = create_access_token({"telegram_id": telegram_id, "username": telegram_username, "user_id": user_id})
-    redis_database.set_user_token(user_id, token)
-
-    return {"Status": 201, "user_id": user_id, "token": token, "username": telegram_username}
-
 
 @router.post("/logout", dependencies=[Depends(JWTBearer())], tags=["default"])
 async def logout_user():
@@ -151,19 +75,6 @@ async def get_user(user_id: int):
         FROM public.user
         WHERE user_id = $1
         """, user_id
-    )
-
-    return {"Status": 200, "result": result}
-
-
-@router.get("/get_friends", tags=["clients which entered by referral link of the user"])
-async def get_subscribed_friends(token_data: Dict = Depends(JWTBearer())):
-    result = await database.fetchrow(
-        """
-        SELECT *
-        FROM public.friend_for
-        WHERE user_id = $1
-        """, token_data.get("user_id")
     )
 
     return {"Status": 200, "result": result}

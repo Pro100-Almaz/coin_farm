@@ -29,6 +29,21 @@ Dates will be announced in our announcement channel. Stay tuned!
 /help to get this guide
 """
         },
+        'bot.error_message': {
+            'ru': "",
+            'kk': "",
+            'en': "Sorry some trouble occurred! Please try again.",
+        },
+        'bot.success_message': {
+            'ru': "",
+            'kk': "",
+            'en': "You have just get subscriber by ID: {referred_id}!",
+        },
+        'bot.help_message': {
+            'ru': "",
+            'kk': "",
+            'en': "HELP!",
+        }
     }
 
     def get_string(self, key, lang = 'en') -> str:

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Union
 
 from fastapi import HTTPException, APIRouter, Request
@@ -29,8 +30,17 @@ class Update(BaseModel):
 async def webhook(update: Update):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
 
+    telegram_id = update.message.get("from").get("id")
+    username = update.message.get("from").get("username", None)
+    language_code = update.message.get("from").get("language_code", "en")
+    first_name = update.message.get("from").get("first_name", None)
+    last_name = update.message.get("from").get("last_name", None)
+    new_referral_link = "https://t.me/practically_bot?start=refId" + str(telegram_id)
+
+    bot_return_text = i18n.get_string('bot.default_text', 'en')
+    process_status = "success"
+
     if update.message.get("text").startswith("/start refId"):
-        telegram_id = update.message.get("from").get("id")
 
         user_id = await database.fetchrow(
             """
@@ -41,46 +51,135 @@ async def webhook(update: Update):
         )
 
         if user_id is None:
-
             ref_id = update.message.get("text").split(" ")[1][5:]
 
-            await database.execute(
+            referring_id = await database.fetchrow(
                 """
-                UPDATE public.friend_for
-                SET list_of_ids = array_append(list_of_ids, $2), count = count + 1
-                WHERE user_id = (
-                                    SELECT user_id
-                                    FROM public."user"
-                                    WHERE telegram_id = $1
-                                )       
-                """, ref_id, telegram_id
+                SELECT user_id
+                FROM public."user"
+                WHERE telegram_id = $1
+                """, ref_id
             )
 
-            payload = {
-                "chat_id": ref_id,
-                "text": f"You have just get subscriber by ID: {telegram_id}!",
-            }
+            try:
+                result = await database.fetch(
+                    """
+                    INSERT INTO public.user (telegram_id, user_name, last_login, sign_up_date, first_name, last_name, 
+                    language_code, referral_link)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    RETURNING user_id
+                    """, telegram_id, username, None, None, first_name, last_name, language_code, new_referral_link
+                )
 
-            requests.post(url, json=payload)
+                user_id = int(result[0].get('user_id'))
 
-    if update.message.get("text").startswith("/help"):
-        pass
+                await database.execute(
+                    """
+                    INSERT INTO public.points (user_id, points_total, points_per_minute) VALUES ($1, 0, 0);
+                    """, user_id
+                )
 
-    reply_markup = {
-        "inline_keyboard": [[{
-            "text": "go to game",
-            "web_app": {"url":"https://telegramminiapp-seven.vercel.app/"}
-        }]]
-    }
+                await database.execute(
+                    """
+                    INSERT INTO public.stamina (user_id) VALUES ($1);
+                    """, user_id
+                )
+
+                await database.execute(
+                    """
+                    INSERT INTO public.level (user_id) VALUES ($1);
+                    """, user_id
+                )
+
+                await database.execute(
+                    """
+                    INSERT INTO public.user_friends_history (user_id, referred_id, points, total_points) 
+                    VALUES ($1, $2, $3, $4);
+                    """, referring_id, user_id, 1000, 1000
+                )
+
+                return_text = i18n.get_string('bot.success_message', language_code).format(referred_id=telegram_id)
+                bot_return_text = i18n.get_string('bot.default_text', 'en')
+
+                payload = {
+                    "chat_id": ref_id,
+                    "text": return_text
+                }
+
+                response = requests.post(url, json=payload)
+
+            except Exception as e:
+                logging.error(f"Error occured while creating user {update.message}: {e}")
+                bot_return_text = i18n.get_string('bot.error_message', language_code)
+                process_status = "error"
+
+    elif update.message.get("text").startswith("/help"):
+        bot_return_text = i18n.get_string('bot.help_message', 'en')
+        process_status = "help"
+
+    elif update.message.get("text").startswith("/start"):
+        user_id = await database.fetchrow(
+            """
+            SELECT user_id
+            FROM public."user"
+            WHERE telegram_id = $1
+            """, telegram_id
+        )
+
+        if user_id is None:
+            try:
+                result = await database.fetch(
+                    """
+                    INSERT INTO public.user (telegram_id, user_name, last_login, sign_up_date, first_name, last_name, 
+                    language_code, referral_link)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    RETURNING user_id
+                    """, telegram_id, username, None, None, first_name, last_name, language_code, new_referral_link
+                )
+
+                user_id = int(result[0].get('user_id'))
+
+                await database.execute(
+                    """
+                    INSERT INTO public.points (user_id, points_total, points_per_minute) VALUES ($1, 0, 0);
+                    """, user_id
+                )
+
+                await database.execute(
+                    """
+                    INSERT INTO public.stamina (user_id) VALUES ($1);
+                    """, user_id
+                )
+
+                await database.execute(
+                    """
+                    INSERT INTO public.level (user_id) VALUES ($1);
+                    """, user_id
+                )
+
+            except Exception as e:
+                logging.error(f"Error occured while creating user {update.message}: {e}")
+                bot_return_text = i18n.get_string('bot.error_message', language_code)
+                process_status = "error"
 
     payload = {
         "chat_id": update.message.get('from').get('id'),
-        "text": i18n.get_string('bot.default_text', 'en'),
-        "reply_markup": reply_markup,
+        "text": bot_return_text
     }
 
+    if process_status == "success":
+        reply_markup = {
+            "inline_keyboard": [[{
+                "text": "go to game",
+                "web_app": {"url":"https://telegramminiapp-seven.vercel.app"}
+            }]]
+        }
+
+        payload["reply_markup"] = reply_markup
+
     response = requests.post(url, json=payload)
-    if response.status_code != 200:
+
+    if response.status_code == 200:
         return {"Status": "ok"}
 
     return {}

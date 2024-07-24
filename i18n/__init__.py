@@ -1,5 +1,9 @@
-default_text = {
-    "en": """
+class I18N:
+    _STRINGS = {
+        'bot.default_text': {
+            'ru': """""",
+            'kk': """""",
+            'en': """
     How to play Coin Earn ⚡️
     
 💰 Tap to earn
@@ -24,4 +28,11 @@ Dates will be announced in our announcement channel. Stay tuned!
 
 /help to get this guide
 """
-}
+        },
+    }
+
+    def get_string(self, key, lang = 'en') -> str:
+        return self._STRINGS.get(key, {}).get(str(lang), f'[INVALID_TRANSLATION:{lang}:{key}]')
+
+
+i18n = I18N()

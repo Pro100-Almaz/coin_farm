@@ -9,6 +9,7 @@ import logging
 import requests
 
 from app.database import database
+from i18n import i18n
 
 load_dotenv()
 
@@ -46,7 +47,7 @@ async def webhook(update: Update):
             await database.execute(
                 """
                 UPDATE public.friend_for
-                SET list_of_ids = array_append(list_of_ids, $2)
+                SET list_of_ids = array_append(list_of_ids, $2), count = count + 1
                 WHERE user_id = (
                                     SELECT user_id
                                     FROM public."user"
@@ -74,12 +75,15 @@ async def webhook(update: Update):
 
     payload = {
         "chat_id": update.message.get('from').get('id'),
-        "text": ,
+        "text": i18n.get_string('bot.default_text', 'en'),
         "reply_markup": reply_markup,
     }
 
     response = requests.post(url, json=payload)
-    return {"Status": "ok"}
+    if response.status_code != 200:
+        return {"Status": "ok"}
+
+    return {}
 
 
 @router.on_event("startup")

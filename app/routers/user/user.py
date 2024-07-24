@@ -3,6 +3,7 @@ import os
 import urllib.parse
 from cgitb import reset
 from datetime import datetime
+from itertools import accumulate
 from typing import Dict
 
 from dotenv import load_dotenv
@@ -55,16 +56,16 @@ async def login_user(user: User):
     user_offline_period = (datetime.now() - user_data.get('last_logout')).total_seconds()
 
     if  user_offline_period < 10800:
-        total_points = user_points.get('points_total') + int(user_offline_period *
-                                                          (user_points.get('points_per_minute') // 60))
+        accumulated_points = int(user_offline_period * (user_points.get('points_per_minute') // 60))
     else:
-        total_points = user_points.get('points_total') + user_points.get('points_per_minute') * 180
+        accumulated_points = user_points.get('points_per_minute') * 180
 
     token = create_access_token({"telegram_id": telegram_id, "username": username,
                                  "user_id": user_id})
     redis_database.set_user_token(user_id, token)
 
-    return {"token": token, "user_id": user_id, "Status": "200", "username": username, "total_points": total_points}
+    return {"token": token, "user_id": user_id, "Status": "200", "username": username,
+            "accumulated_points": accumulated_points}
 
 @router.post("/create")
 async def create_user(new_user: User):
@@ -115,12 +116,6 @@ async def create_user(new_user: User):
 
         await database.execute(
             """
-            INSERT INTO public.friend_to (user_id, friend_id) VALUES ($1, NULL);
-            """, user_id
-        )
-
-        await database.execute(
-            """
             INSERT INTO public.level (user_id, level, current_percent) VALUES ($1, 1, 0);
             """, user_id
         )
@@ -161,19 +156,6 @@ async def get_user(user_id: int):
     return {"Status": 200, "result": result}
 
 
-@router.get("/get_friend", tags=["user by which referral link, client was called"])
-async def get_linked_friend(token_data: Dict = Depends(JWTBearer())):
-    result = await database.fetchrow(
-        """
-        SELECT friend_id
-        FROM public.friend_to
-        WHERE user_id = $1
-        """, token_data.get("user_id")
-    )
-
-    return {"Status": 200, "result": result}
-
-
 @router.get("/get_friends", tags=["clients which entered by referral link of the user"])
 async def get_subscribed_friends(token_data: Dict = Depends(JWTBearer())):
     result = await database.fetchrow(
@@ -191,7 +173,7 @@ async def get_subscribed_friends(token_data: Dict = Depends(JWTBearer())):
 async def get_points(token_data: Dict = Depends(JWTBearer())):
     result = await database.fetchrow(
         """
-        SELECT *
+        SELECT points_total, points_per_minute, points_per_click, upgrade_price
         FROM public.points
         WHERE user_id = $1
         """, token_data.get("user_id")

@@ -8,6 +8,7 @@ import os
 import logging
 import requests
 
+from app.database import database
 
 load_dotenv()
 
@@ -23,18 +24,46 @@ class Update(BaseModel):
     message: dict
 
 
-@router.post(f"")
+@router.post("", tags=["telegram"])
 async def webhook(update: Update):
-    logging.info(update)
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
 
     if update.message.get("text").startswith("/start refId"):
-        ref_id = update.message.get("text").split("")[2][5:]
+        telegram_id = update.message.get("from").get("id")
 
+        user_id = await database.fetchrow(
+            """
+            SELECT user_id
+            FROM public."user"
+            WHERE telegram_id = $1
+            """, telegram_id
+        )
+
+        if user_id is None:
+
+            ref_id = update.message.get("text").split(" ")[1][5:]
+
+            await database.execute(
+                """
+                UPDATE public.friend_for
+                SET list_of_ids = array_append(list_of_ids, $2)
+                WHERE user_id = (
+                                    SELECT user_id
+                                    FROM public."user"
+                                    WHERE telegram_id = $1
+                                )       
+                """, ref_id, telegram_id
+            )
+
+            payload = {
+                "chat_id": ref_id,
+                "text": f"You have just get subscriber by ID: {telegram_id}!",
+            }
+
+            requests.post(url, json=payload)
+
+    if update.message.get("text").startswith("/help"):
         pass
-
-
-
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
 
     reply_markup = {
         "inline_keyboard": [[{
@@ -45,36 +74,11 @@ async def webhook(update: Update):
 
     payload = {
         "chat_id": update.message.get('from').get('id'),
-        "text": """
-            How to play Coin Earn ⚡️
-    
-💰 Tap to earn
-Tap the screen and collect coins.
-
-⛏ Mine
-Upgrade cards that will give you passive income opportunities.
-
-⏰ Profit per hour
-The exchange will work for you on its own, even when you are not in the game for 3 hours.
-Then you need to log in to the game again.
-
-📈 LVL
-The more coins you have on your balance, the higher the level of your exchange is and the faster you can earn more coins.
-
-👥 Friends
-Invite your friends and you’ll get bonuses. Help a friend move to the next leagues and you'll get even more bonuses.
-
-🪙 Token listing
-At the end of the season, a token will be released and distributed among the players.
-Dates will be announced in our announcement channel. Stay tuned!
-
-/help to get this guide
-        """,
+        "text": ,
         "reply_markup": reply_markup,
     }
 
     response = requests.post(url, json=payload)
-    logging.info(response)
     return {"Status": "ok"}
 
 

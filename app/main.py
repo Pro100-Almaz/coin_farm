@@ -51,17 +51,6 @@ class LogMiddleware(BaseHTTPMiddleware):
 
         return new_response
 
-# @app.middleware("https")
-# async def log_middleware(request: Request, call_next):
-#     response = await call_next(request)
-#
-#     log_dict = {
-#         'url': request.url.path,
-#         'method': request.method
-#     }
-#     logger.info(log_dict)
-#
-#     return response
 
 app.add_middleware(LogMiddleware)
 

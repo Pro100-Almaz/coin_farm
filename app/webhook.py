@@ -1,4 +1,5 @@
 from datetime import datetime
+from os.path import isabs
 from typing import Union
 
 from fastapi import HTTPException, APIRouter, Request
@@ -8,6 +9,7 @@ from dotenv import load_dotenv
 import os
 import logging
 import requests
+from setuptools.package_index import user_agent
 
 from app.database import database
 from i18n import i18n
@@ -28,6 +30,7 @@ class Update(BaseModel):
 
 @router.post("", tags=["telegram"])
 async def webhook(update: Update):
+    print(update.message)
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
 
     telegram_id = update.message.get("from").get("id")
@@ -35,6 +38,7 @@ async def webhook(update: Update):
     language_code = update.message.get("from").get("language_code", "en")
     first_name = update.message.get("from").get("first_name", None)
     last_name = update.message.get("from").get("last_name", None)
+    is_tg_premium = update.message.get("from").get("is_premium", False)
     new_referral_link = "https://t.me/practically_bot?start=refId" + str(telegram_id)
 
     bot_return_text = i18n.get_string('bot.default_text', 'en')
@@ -58,24 +62,26 @@ async def webhook(update: Update):
                 SELECT user_id
                 FROM public."user"
                 WHERE telegram_id = $1
-                """, ref_id
+                """, int(ref_id)
             )
+
+            referring_id = int(referring_id.get("user_id"))
 
             try:
                 result = await database.fetch(
                     """
                     INSERT INTO public.user (telegram_id, user_name, last_login, sign_up_date, first_name, last_name, 
-                    language_code, referral_link)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    language_code, referral_link, tg_premium)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                     RETURNING user_id
-                    """, telegram_id, username, None, None, first_name, last_name, language_code, new_referral_link
+                    """, telegram_id, username, None, None, first_name, last_name, language_code, new_referral_link, is_tg_premium
                 )
 
                 user_id = int(result[0].get('user_id'))
 
                 await database.execute(
                     """
-                    INSERT INTO public.points (user_id, points_total, points_per_minute) VALUES ($1, 0, 0);
+                    INSERT INTO public.points (user_id, points_total, points_per_minute) VALUES ($1, 2000, 0);
                     """, user_id
                 )
 
@@ -95,11 +101,12 @@ async def webhook(update: Update):
                     """
                     INSERT INTO public.user_friends_history (user_id, referred_id, points, total_points) 
                     VALUES ($1, $2, $3, $4);
-                    """, referring_id, user_id, 1000, 1000
+                    """, referring_id, user_id, 5000, 5000
                 )
 
                 return_text = i18n.get_string('bot.success_message', language_code).format(referred_id=telegram_id)
-                bot_return_text = i18n.get_string('bot.default_text', 'en')
+                bot_return_text = (i18n.get_string('bot.invited_client_welcome_text', language_code).
+                                   format(user_nickname=username))
 
                 payload = {
                     "chat_id": ref_id,
@@ -131,10 +138,10 @@ async def webhook(update: Update):
                 result = await database.fetch(
                     """
                     INSERT INTO public.user (telegram_id, user_name, last_login, sign_up_date, first_name, last_name, 
-                    language_code, referral_link)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    language_code, referral_link, tg_premium)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                     RETURNING user_id
-                    """, telegram_id, username, None, None, first_name, last_name, language_code, new_referral_link
+                    """, telegram_id, username, None, None, first_name, last_name, language_code, new_referral_link, is_tg_premium
                 )
 
                 user_id = int(result[0].get('user_id'))
@@ -156,6 +163,9 @@ async def webhook(update: Update):
                     INSERT INTO public.level (user_id) VALUES ($1);
                     """, user_id
                 )
+
+                bot_return_text = (i18n.get_string('bot.client_welcome_text', language_code).
+                                   format(user_nickname=username))
 
             except Exception as e:
                 logging.error(f"Error occured while creating user {update.message}: {e}")

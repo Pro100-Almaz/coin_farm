@@ -101,20 +101,20 @@ async def buy_miner(miner_id: int, token_data: Dict = Depends(JWTBearer())):
                     detail="User points is not facing required amount!"
                 )
 
-        elif condition == "minimum_friends":
-            user_friends = await database.fetchrow(
-                """
-                SELECT count
-                FROM public.friend_for
-                WHERE user_id = $1
-                """, user_id
-            )
-
-            if user_friends < int(required_value):
-                return HTTPException(
-                    status_code=status.HTTP_412_PRECONDITION_FAILED,
-                    detail="User friends is not facing required amount!"
-                )
+        # elif condition == "minimum_friends":
+        #     user_friends = await database.fetchrow(
+        #         """
+        #         SELECT count
+        #         FROM public.friend_for
+        #         WHERE user_id = $1
+        #         """, user_id
+        #     )
+        #
+        #     if user_friends < int(required_value):
+        #         return HTTPException(
+        #             status_code=status.HTTP_412_PRECONDITION_FAILED,
+        #             detail="User friends is not facing required amount!"
+        #         )
 
     next_price = int(miner.get("price") + (miner.get("price") * miner.get("rise_coef_price") / 100))
     next_points_per_hour = int(miner.get("point_per_hour") + (miner.get("point_per_hour") *
@@ -130,7 +130,7 @@ async def buy_miner(miner_id: int, token_data: Dict = Depends(JWTBearer())):
     await database.execute(
         """
         UPDATE public.points
-        SET points_per_hour = points_per_hour + $2
+        SET points_per_minute = points_per_minute + $2
         WHERE user_id = $1;
         """, user_id, miner.get("point_per_hour")
     )

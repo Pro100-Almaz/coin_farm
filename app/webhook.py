@@ -1,6 +1,6 @@
 from datetime import datetime
 from os.path import isabs
-from typing import Union
+from typing import Union, Annotated
 
 from fastapi import HTTPException, APIRouter, Request
 from pydantic import BaseModel
@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 import os
 import logging
 import requests
-from setuptools.package_index import user_agent
 
 from app.database import database
 from i18n import i18n
@@ -30,7 +29,9 @@ class Update(BaseModel):
 
 @router.post("", tags=["telegram"])
 async def webhook(update: Update):
-    print(update.message)
+    if not update.message.get("text", None):
+        return {"Status": "ok"}
+
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
 
     telegram_id = update.message.get("from").get("id")
@@ -71,10 +72,10 @@ async def webhook(update: Update):
                 result = await database.fetch(
                     """
                     INSERT INTO public.user (telegram_id, user_name, last_login, sign_up_date, first_name, last_name, 
-                    language_code, referral_link, tg_premium)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    language_code, referral_link)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                     RETURNING user_id
-                    """, telegram_id, username, None, None, first_name, last_name, language_code, new_referral_link, is_tg_premium
+                    """, telegram_id, username, None, None, first_name, last_name, language_code, new_referral_link,
                 )
 
                 user_id = int(result[0].get('user_id'))
@@ -97,11 +98,13 @@ async def webhook(update: Update):
                     """, user_id
                 )
 
+                referral_points = 20000 if is_tg_premium else 5000
+
                 await database.execute(
                     """
-                    INSERT INTO public.user_friends_history (user_id, referred_id, points, total_points) 
-                    VALUES ($1, $2, $3, $4);
-                    """, referring_id, user_id, 5000, 5000
+                    INSERT INTO public.user_friends_history (user_id, referred_id, points, total_points, tg_premium) 
+                    VALUES ($1, $2, $3, $4, $5);
+                    """, referring_id, user_id, referral_points, referral_points, is_tg_premium
                 )
 
                 return_text = i18n.get_string('bot.success_message', language_code).format(referred_id=telegram_id)
@@ -138,10 +141,10 @@ async def webhook(update: Update):
                 result = await database.fetch(
                     """
                     INSERT INTO public.user (telegram_id, user_name, last_login, sign_up_date, first_name, last_name, 
-                    language_code, referral_link, tg_premium)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    language_code, referral_link)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                     RETURNING user_id
-                    """, telegram_id, username, None, None, first_name, last_name, language_code, new_referral_link, is_tg_premium
+                    """, telegram_id, username, None, None, first_name, last_name, language_code, new_referral_link
                 )
 
                 user_id = int(result[0].get('user_id'))
@@ -172,6 +175,7 @@ async def webhook(update: Update):
                 bot_return_text = i18n.get_string('bot.error_message', language_code)
                 process_status = "error"
 
+
     payload = {
         "chat_id": update.message.get('from').get('id'),
         "text": bot_return_text
@@ -190,9 +194,9 @@ async def webhook(update: Update):
     response = requests.post(url, json=payload)
 
     if response.status_code == 200:
-        return {"Status": "ok"}
+        print(response.json())
 
-    return {}
+    return {"Status": "ok"}
 
 
 @router.on_event("startup")

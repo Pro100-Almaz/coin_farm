@@ -10,7 +10,7 @@ from .schemas import User, UserLevel
 from app.utils import create_access_token
 from app.auth_bearer import JWTBearer
 from app.database import database, redis_database
-
+from app.logger import logger
 
 load_dotenv()
 router = APIRouter()
@@ -124,12 +124,29 @@ async def get_level_list():
 
 @router.patch("/upgrade_level", tags=["level"])
 async def upgrade_level(user_data: UserLevel, token_data: Dict = Depends(JWTBearer())):
+    user_id = token_data.get("user_id")
+
+    try:
+        await database.execute(
+            """
+            UPDATE public.user_friends_history AS ufh
+            SET points = CASE
+                                    WHEN ufh.tg_premium THEN rp.for_premium
+                                    ELSE rp.for_standard
+                         END
+            FROM public.referral_points AS rp
+            WHERE ufh.referred_id = $1 AND rp.lvl = $2
+            """, user_id, user_data.new_user_lvl
+        )
+    except Exception as e:
+        logger.error(f"Tried to add referral new points! User id: {user_id}")
+
     result = await database.fetchrow(
         """
         UPDATE public.level
         SET level = $2
         WHERE user_id = $1
-        """, token_data.get("user_id"), user_data.new_user_lvl
+        """, user_id, user_data.new_user_lvl
     )
 
     if not result:

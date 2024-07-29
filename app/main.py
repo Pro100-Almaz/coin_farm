@@ -1,5 +1,3 @@
-from multiprocessing.managers import dispatch
-
 import uvicorn
 import json
 from fastapi import FastAPI, Request, Response
@@ -20,7 +18,7 @@ logger.info("Start FastAPI app...")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -31,6 +31,9 @@ class LogMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
 
+        if request.url.path == "/docs" or request.url.path == "/openapi.json":
+            return response
+
         response_body = [chunk async for chunk in response.body_iterator]
         response_body_bytes = b''.join(response_body)
 

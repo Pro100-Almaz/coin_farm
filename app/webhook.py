@@ -72,10 +72,10 @@ async def webhook(update: Update):
                 result = await database.fetch(
                     """
                     INSERT INTO public.user (telegram_id, user_name, last_login, sign_up_date, first_name, last_name, 
-                    language_code, referral_link)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    language_code, referral_link, bonus_id)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                     RETURNING user_id
-                    """, telegram_id, username, None, None, first_name, last_name, language_code, new_referral_link,
+                    """, telegram_id, username, None, None, first_name, last_name, language_code, new_referral_link, 1
                 )
 
                 user_id = int(result[0].get('user_id'))
@@ -141,10 +141,10 @@ async def webhook(update: Update):
                 result = await database.fetch(
                     """
                     INSERT INTO public.user (telegram_id, user_name, last_login, sign_up_date, first_name, last_name, 
-                    language_code, referral_link)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    language_code, referral_link, bonus_id)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                     RETURNING user_id
-                    """, telegram_id, username, None, None, first_name, last_name, language_code, new_referral_link
+                    """, telegram_id, username, None, None, first_name, last_name, language_code, new_referral_link, 1
                 )
 
                 user_id = int(result[0].get('user_id'))

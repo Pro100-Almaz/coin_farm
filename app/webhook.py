@@ -117,6 +117,7 @@ async def webhook(update: Update):
                 }
 
                 response = requests.post(url, json=payload)
+                print(response)
 
             except Exception as e:
                 logging.error(f"Error occured while creating user {update.message}: {e}")
